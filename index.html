@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FerroVentas – Sistema de ventas (prototipo)</title>
+<style>
+:root{--ink:#14303a;--paper:#f2f4f1;--card:#fff;--line:#d3d9d4;--accent:#e3a712;--muted:#5c6b70;--ok:#2f7d4f;--bad:#b23a2e}
+@media (prefers-color-scheme:dark){:root{--ink:#e7efe9;--paper:#101b1f;--card:#18262b;--line:#2c3e44;--muted:#9bb0b5}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Georgia,"Times New Roman",serif;background:var(--paper);color:var(--ink);line-height:1.5}
+h1,h2,h3,nav a,th,button,label,.num{font-family:"Trebuchet MS",Verdana,sans-serif}
+header{background:#14303a;color:#f2f4f1;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-bottom:5px solid var(--accent)}
+header h1{margin:0;font-size:1.3rem;letter-spacing:.02em}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{color:#f2f4f1;text-decoration:none;padding:8px 14px;border-radius:4px;font-size:.95rem}
+nav a:hover,nav a:focus-visible{background:#ffffff22;outline:2px solid var(--accent)}
+nav a.on{background:var(--accent);color:#14303a;font-weight:bold}
+main{max-width:980px;margin:0 auto;padding:22px 16px 50px}
+section{display:none}section.on{display:block}
+h2{font-size:1.5rem;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:62ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--accent);padding:14px 16px}
+.stat .num{font-size:1.9rem;font-weight:bold}
+.stat span{color:var(--muted);font-size:.9rem}
+.box{background:var(--card);border:1px solid var(--line);padding:16px;margin-bottom:18px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:480px}
+th{text-align:left;font-size:.85rem;color:var(--muted);border-bottom:2px solid var(--ink);padding:8px}
+td{padding:8px;border-bottom:1px solid var(--line)}
+td.r,th.r{text-align:right}
+.low{color:var(--bad);font-weight:bold}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+input,select{padding:9px;border:1px solid var(--line);border-radius:3px;background:var(--paper);color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent)}
+button{background:var(--ink);color:var(--paper);border:0;padding:10px 16px;border-radius:3px;cursor:pointer;font-size:.95rem}
+button:hover{background:var(--accent);color:#14303a}
+.msg{margin:10px 0 0;font-family:"Trebuchet MS",sans-serif;font-size:.9rem;min-height:1.3em}
+.ok{color:var(--ok)}.err{color:var(--bad)}
+.total{font-family:"Trebuchet MS",sans-serif;font-size:1.1rem;text-align:right;margin-top:10px}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>FerroVentas</h1>
+  <nav aria-label="Menú principal">
+    <a href="#inicio" data-v="inicio">Inicio</a>
+    <a href="#productos" data-v="productos">Productos</a>
+    <a href="#clientes" data-v="clientes">Clientes</a>
+    <a href="#ventas" data-v="ventas">Ventas</a>
+    <a href="#reportes" data-v="reportes">Reportes</a>
+  </nav>
+</header>
+<main>
+
+<section id="inicio">
+  <h2>Resumen del día</h2>
+  <p class="sub">Sistema de ventas para ferretería. Registra ventas, controla el stock y consulta a tus clientes desde un solo lugar. Los datos son ficticios.</p>
+  <div class="stats">
+    <div class="stat"><div class="num" id="s-ventas">0</div><span>ventas registradas</span></div>
+    <div class="stat"><div class="num" id="s-total">C$ 0</div><span>total vendido</span></div>
+    <div class="stat"><div class="num" id="s-bajo">0</div><span>productos con stock bajo</span></div>
+    <div class="stat"><div class="num" id="s-cli">0</div><span>clientes activos</span></div>
+  </div>
+  <div class="box"><h3>Últimas ventas</h3>
+    <table><thead><tr><th>N.º</th><th>Cliente</th><th>Producto</th><th class="r">Total</th></tr></thead><tbody id="ult"></tbody></table>
+  </div>
+</section>
+
+<section id="productos">
+  <h2>Productos</h2>
+  <p class="sub">Catálogo con precio y existencias. El stock bajo se marca en rojo.</p>
+  <div class="box"><form id="f-prod">
+    <label>Código<input name="cod" required maxlength="6"></label>
+    <label>Producto<input name="nom" required></label>
+    <label>Precio (C$)<input name="pre" type="number" min="1" required></label>
+    <label>Stock<input name="stk" type="number" min="0" required></label>
+    <button>Agregar producto</button></form>
+    <p class="msg" id="m-prod"></p></div>
+  <div class="box"><table><thead><tr><th>Código</th><th>Producto</th><th class="r">Precio</th><th class="r">Stock</th></tr></thead><tbody id="t-prod"></tbody></table></div>
+</section>
+
+<section id="clientes">
+  <h2>Clientes</h2>
+  <p class="sub">Directorio de clientes y sus compras acumuladas.</p>
+  <div class="box"><form id="f-cli">
+    <label>Nombre<input name="nom" required></label>
+    <label>Teléfono<input name="tel" required pattern="[0-9\- ]{8,}" title="Mínimo 8 dígitos"></label>
+    <label>Correo<input name="cor" type="email" required></label>
+    <button>Agregar cliente</button></form>
+    <p class="msg" id="m-cli"></p></div>
+  <div class="box"><table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Correo</th><th class="r">Compras</th></tr></thead><tbody id="t-cli"></tbody></table></div>
+</section>
+
+<section id="ventas">
+  <h2>Ventas</h2>
+  <p class="sub">Elige cliente, producto y cantidad. Al registrar, el stock se descuenta.</p>
+  <div class="box"><form id="f-ven">
+    <label>Cliente<select name="cli" id="sel-cli"></select></label>
+    <label>Producto<select name="pro" id="sel-pro"></select></label>
+    <label>Cantidad<input name="can" type="number" min="1" value="1" required></label>
+    <button>Registrar venta</button></form>
+    <p class="msg" id="m-ven"></p></div>
+  <div class="box"><table><thead><tr><th>N.º</th><th>Fecha</th><th>Cliente</th><th>Producto</th><th class="r">Cant.</th><th class="r">Total</th></tr></thead><tbody id="t-ven"></tbody></table></div>
+</section>
+
+<section id="reportes">
+  <h2>Reportes</h2>
+  <p class="sub">Ventas acumuladas por producto.</p>
+  <div class="box"><table><thead><tr><th>Producto</th><th class="r">Unidades</th><th class="r">Ingresos</th></tr></thead><tbody id="t-rep"></tbody></table>
+  <p class="total" id="rep-total"></p></div>
+</section>
+
+</main>
+<footer>Prototipo académico con datos ficticios, sin base de datos. <a href="../index.html">Volver a todos los sistemas</a></footer>
+
+<script>
+var productos=[{c:"001",n:"Taladro",p:2500,s:8},{c:"002",n:"Martillo",p:350,s:15},{c:"003",n:"Destornillador",p:120,s:3},{c:"004",n:"Cinta métrica",p:180,s:22},{c:"005",n:"Cemento 42 kg",p:420,s:40}];
+var clientes=[{n:"Ana Torres",t:"8888-1234",c:"ana@correo.com"},{n:"Luis Mejía",t:"8777-4567",c:"luis@correo.com"},{n:"Constructora Sol",t:"2255-9900",c:"ventas@sol.com"}];
+var ventas=[{id:1,f:"2026-10-20",cl:"Ana Torres",pr:"Martillo",q:2,t:700},{id:2,f:"2026-10-21",cl:"Constructora Sol",pr:"Cemento 42 kg",q:10,t:4200}];
+var $=function(i){return document.getElementById(i)};
+var fmt=function(n){return "C$ "+n.toLocaleString("es-NI")};
+function tr(a){return "<tr>"+a.join("")+"</tr>"}
+function td(v,r){return "<td"+(r?' class="r"':"")+">"+v+"</td>"}
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function render(){
+  $("t-prod").innerHTML=productos.map(function(p){return tr([td(p.c),td(esc(p.n)),td(fmt(p.p),1),td(p.s<=5?'<span class="low">'+p.s+' (bajo)</span>':p.s,1)])}).join("");
+  $("t-cli").innerHTML=clientes.map(function(c){var tot=ventas.filter(function(v){return v.cl===c.n}).reduce(function(a,v){return a+v.t},0);return tr([td(esc(c.n)),td(esc(c.t)),td(esc(c.c)),td(fmt(tot),1)])}).join("");
+  $("t-ven").innerHTML=ventas.slice().reverse().map(function(v){return tr([td(v.id),td(v.f),td(esc(v.cl)),td(esc(v.pr)),td(v.q,1),td(fmt(v.t),1)])}).join("");
+  $("ult").innerHTML=ventas.slice(-3).reverse().map(function(v){return tr([td(v.id),td(esc(v.cl)),td(esc(v.pr)),td(fmt(v.t),1)])}).join("");
+  $("sel-cli").innerHTML=clientes.map(function(c){return "<option>"+esc(c.n)+"</option>"}).join("");
+  $("sel-pro").innerHTML=productos.map(function(p){return '<option value="'+p.c+'">'+esc(p.n)+" – "+fmt(p.p)+" ("+p.s+")</option>"}).join("");
+  var tot=ventas.reduce(function(a,v){return a+v.t},0);
+  $("s-ventas").textContent=ventas.length;$("s-total").textContent=fmt(tot);
+  $("s-bajo").textContent=productos.filter(function(p){return p.s<=5}).length;$("s-cli").textContent=clientes.length;
+  var rep={};ventas.forEach(function(v){rep[v.pr]=rep[v.pr]||{q:0,t:0};rep[v.pr].q+=v.q;rep[v.pr].t+=v.t});
+  $("t-rep").innerHTML=Object.keys(rep).map(function(k){return tr([td(esc(k)),td(rep[k].q,1),td(fmt(rep[k].t),1)])}).join("");
+  $("rep-total").textContent="Total general: "+fmt(tot);
+}
+function say(id,t,ok){var e=$(id);e.textContent=t;e.className="msg "+(ok?"ok":"err")}
+$("f-prod").onsubmit=function(e){e.preventDefault();var f=e.target;
+  if(productos.some(function(p){return p.c===f.cod.value.trim()})){say("m-prod","Ese código ya existe. Usa uno distinto.");return}
+  productos.push({c:f.cod.value.trim(),n:f.nom.value.trim(),p:+f.pre.value,s:+f.stk.value});f.reset();render();say("m-prod","Producto agregado.",1)};
+$("f-cli").onsubmit=function(e){e.preventDefault();var f=e.target;
+  clientes.push({n:f.nom.value.trim(),t:f.tel.value.trim(),c:f.cor.value.trim()});f.reset();render();say("m-cli","Cliente agregado.",1)};
+$("f-ven").onsubmit=function(e){e.preventDefault();var f=e.target;
+  var p=productos.filter(function(x){return x.c===f.pro.value})[0],q=+f.can.value;
+  if(q>p.s){say("m-ven","Stock insuficiente: solo quedan "+p.s+" de "+p.n+".");return}
+  p.s-=q;ventas.push({id:ventas.length+1,f:new Date().toISOString().slice(0,10),cl:f.cli.value,pr:p.n,q:q,t:q*p.p});
+  render();say("m-ven","Venta registrada. Total "+fmt(q*p.p)+".",1)};
+function nav(){var v=(location.hash||"#inicio").slice(1);if(!$(v))v="inicio";
+  document.querySelectorAll("section").forEach(function(s){s.classList.toggle("on",s.id===v)});
+  document.querySelectorAll("nav a").forEach(function(a){a.classList.toggle("on",a.dataset.v===v)})}
+window.onhashchange=nav;render();nav();
+</script>
+</body>
+</html>
